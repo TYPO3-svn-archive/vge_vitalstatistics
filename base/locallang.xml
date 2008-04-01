@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<T3locallang>
+	<meta type="array">
+		<type>module</type>
+		<description>Language labels for service &quot;tx_vgevitalstatistics_base&quot;</description>
+	</meta>
+	<data type="array">
+		<languageKey index="default" type="array">
+			<label index="process.birth">Order a birth certificate</label>
+			<label index="process.marriage">Order a marriage certificate</label>
+			<label index="process.death">Order a death certificate</label>
+			<label index="confirmation">Confirmation</label>
+		</languageKey>
+		<languageKey index="fr" type="array">
+			<label index="process.birth">Commander un certificat de naissance</label>
+			<label index="process.marriage">Commander un certificat de mariage</label>
+			<label index="process.death">Commander un certificat de décès</label>
+			<label index="confirmation">Confirmation</label>
+		</languageKey>
+	</data>
+</T3locallang>

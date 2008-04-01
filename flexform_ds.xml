@@ -1,0 +1,70 @@
+<T3DataStructure>
+	<meta>
+		<langDisable>1</langDisable>
+	</meta>
+	<sheets>
+		<sDEF>
+			<ROOT>
+				<TCEforms>
+					<sheetTitle>LLL:EXT:vge_vitalstatistics/locallang_db.xml:tx_vgevitalstatistics_processes.pi_flexform.sheetGeneral</sheetTitle>
+				</TCEforms>
+				<type>array</type>
+				<el>
+					<gender>
+						<TCEforms>
+							<label>LLL:EXT:vge_vitalstatistics/locallang_db.xml:tx_vgevitalstatistics_processes.pi_flexform.gender</label>
+							<config>
+								<type>radio</type>
+								<items type="array">
+									<numIndex index="0" type="array">
+										<numIndex index="0">LLL:EXT:vge_vitalstatistics/locallang_db.xml:tx_vgevitalstatistics_processes.pi_flexform.gender.M</numIndex>
+										<numIndex index="1">M</numIndex>
+									</numIndex>
+									<numIndex index="1" type="array">
+										<numIndex index="0">LLL:EXT:vge_vitalstatistics/locallang_db.xml:tx_vgevitalstatistics_processes.pi_flexform.gender.F</numIndex>
+										<numIndex index="1">F</numIndex>
+									</numIndex>
+								</items>
+								<default>M</default>
+							</config>
+						</TCEforms>
+					</gender>
+					<firstName>
+						<TCEforms>
+							<label>LLL:EXT:vge_vitalstatistics/locallang_db.xml:tx_vgevitalstatistics_processes.pi_flexform.firstName</label>
+							<config>
+								<type>input</type>
+								<size>30</size>
+								<checkbox></checkbox>
+								<required>1</required>
+							</config>
+						</TCEforms>
+					</firstName>
+					<lastName>
+						<TCEforms>
+							<label>LLL:EXT:vge_vitalstatistics/locallang_db.xml:tx_vgevitalstatistics_processes.pi_flexform.lastName</label>
+							<config>
+								<type>input</type>
+								<size>30</size>
+								<checkbox></checkbox>
+								<required>1</required>
+							</config>
+						</TCEforms>
+					</lastName>
+					<password>
+						<TCEforms>
+							<label>LLL:EXT:vge_vitalstatistics/locallang_db.xml:tx_vgevitalstatistics_processes.pi_flexform.password</label>
+							<config>
+								<type>input</type>
+								<size>20</size>
+								<checkbox></checkbox>
+								<required>1</required>
+								<eval>password</eval>
+							</config>
+						</TCEforms>
+					</password>
+				</el>
+			</ROOT>
+		</sDEF>
+	</sheets>
+</T3DataStructure>

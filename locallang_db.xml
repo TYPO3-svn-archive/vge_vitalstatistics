@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<T3locallang>
+	<meta type="array">
+		<type>database</type>
+		<description>Language labels for database tables/fields belonging to extension 'vge_vitalstatistics'</description>
+	</meta>
+	<data type="array">
+		<languageKey index="default" type="array">
+			<label index="tx_vgevitalstatistics_processes">Vital statistics Processes</label>
+			<label index="tx_vgevitalstatistics_processes.type">Process type</label>
+			<label index="tx_vgevitalstatistics_processes.user">User</label>
+			<label index="tx_vgevitalstatistics_processes.status">Status</label>
+			<label index="tx_vgevitalstatistics_processes.formdata">Form data</label>
+			<label index="tx_vgevitalstatistics_processes.pi_flexform.sheetGeneral">General</label>
+			<label index="tx_vgevitalstatistics_processes.pi_flexform.gender">Gender</label>
+			<label index="tx_vgevitalstatistics_processes.pi_flexform.gender.M">Male</label>
+			<label index="tx_vgevitalstatistics_processes.pi_flexform.gender.F">Female</label>
+			<label index="tx_vgevitalstatistics_processes.pi_flexform.firstName">First name</label>
+			<label index="tx_vgevitalstatistics_processes.pi_flexform.lastName">Last name</label>
+			<label index="tx_vgevitalstatistics_processes.pi_flexform.password">Password</label>
+		</languageKey>
+		<languageKey index="fr" type="array">
+			<label index="tx_vgevitalstatistics_processes">Procédures d'état civil</label>
+			<label index="tx_vgevitalstatistics_processes.type">Type de procédure</label>
+			<label index="tx_vgevitalstatistics_processes.user">Utilisateur</label>
+			<label index="tx_vgevitalstatistics_processes.status">Statut</label>
+			<label index="tx_vgevitalstatistics_processes.formdata">Données saisies</label>
+			<label index="tx_vgevitalstatistics_processes.pi_flexform.sheetGeneral">Généralités</label>
+			<label index="tx_vgevitalstatistics_processes.pi_flexform.gender">Sexe</label>
+			<label index="tx_vgevitalstatistics_processes.pi_flexform.gender.M">Homme</label>
+			<label index="tx_vgevitalstatistics_processes.pi_flexform.gender.F">Femme</label>
+			<label index="tx_vgevitalstatistics_processes.pi_flexform.firstName">Prénom</label>
+			<label index="tx_vgevitalstatistics_processes.pi_flexform.lastName">Nom</label>
+			<label index="tx_vgevitalstatistics_processes.pi_flexform.password">Mot de passe</label>
+		</languageKey>
+	</data>
+</T3locallang>
