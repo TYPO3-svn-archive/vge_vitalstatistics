@@ -19,9 +19,18 @@ $TYPO3_CONF_VARS['EXTCONF']['vge_vitalstatistics']['processes'] = array(
 				'displayNextButton' => true
 			),
 			3 => array(
-				'type' => 'payment'
+				'type' => 'payment',
+				'paymethods' => array(
+									'paymentlib_offline_bank_check',
+									'paymentlib_offline_giro',
+									'paymentlib_offline_cod',
+									'paymentlib_offline_cash'
+								),
 			),
 			4 => array(
+				'type' => 'paymentvalidation',
+			),
+			5 => array(
 				'type' => 'confirmation'
 			)
 		)

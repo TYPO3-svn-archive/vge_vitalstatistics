@@ -51,18 +51,6 @@
 							</config>
 						</TCEforms>
 					</lastName>
-					<password>
-						<TCEforms>
-							<label>LLL:EXT:vge_vitalstatistics/locallang_db.xml:tx_vgevitalstatistics_processes.pi_flexform.password</label>
-							<config>
-								<type>input</type>
-								<size>20</size>
-								<checkbox></checkbox>
-								<required>1</required>
-								<eval>password</eval>
-							</config>
-						</TCEforms>
-					</password>
 				</el>
 			</ROOT>
 		</sDEF>

@@ -30,6 +30,7 @@
  * @subpackage	tx_vgevitalstatistics
  */
 class tx_vgevitalstatistics_common_base {
+	static public $extKey = 'vge_vitalstatistics';
 	static public $processList = array('birth', 'marriage', 'death');
 	static public $locallangFile = 'EXT:vge_vitalstatistics/base/locallang.xml';
 }

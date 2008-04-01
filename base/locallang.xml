@@ -10,12 +10,18 @@
 			<label index="process.marriage">Order a marriage certificate</label>
 			<label index="process.death">Order a death certificate</label>
 			<label index="confirmation">Confirmation</label>
+			<label index="transaction_init_failed">The payment process could not be started.</label>
+			<label index="payment_declined">The payment was refused.</label>
+			<label index="transaction_settings_failed">The payment details could not be defined.</label>
 		</languageKey>
 		<languageKey index="fr" type="array">
 			<label index="process.birth">Commander un certificat de naissance</label>
 			<label index="process.marriage">Commander un certificat de mariage</label>
 			<label index="process.death">Commander un certificat de décès</label>
 			<label index="confirmation">Confirmation</label>
+			<label index="transaction_init_failed">Le processus de paiement n'a pas pu être lancé.</label>
+			<label index="payment_declined">Le paiement a été refusé.</label>
+			<label index="transaction_settings_failed">Les détails du paiement n'ont pas pu être définis.</label>
 		</languageKey>
 	</data>
 </T3locallang>

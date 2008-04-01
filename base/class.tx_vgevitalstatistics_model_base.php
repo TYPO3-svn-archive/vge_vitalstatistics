@@ -66,22 +66,26 @@ class tx_vgevitalstatistics_model_base extends tx_vgeprocesses_model_base {
 	/**
 	 * This process returns all the data related to a given process at a given step for vital statistics
 	 *
-	 * @param	array	$parameters: list of parameters, including process name, step, etc.
+	 * @param	array		$parameters: list of parameters, including process name, step, etc.
+	 * @param	reference	$controller: reference to the controller object
 	 *
 	 * @return	array	all data related to the process and step
 	 */
-	public function getDataForStep($parameters) {
+	public function getDataForStep($parameters, &$controller) {
+			// Store reference to the controller
+		$this->controller = $controller;
+
 			// Make sure a step number is defined
 		if (empty($parameters['step'])) $parameters['step'] = 1;
 
 			// Read the extension configuration to get step information
 		if (isset($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['vge_vitalstatistics']['processes'][$parameters['process']])) {
-			$configuration = $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['vge_vitalstatistics']['processes'][$parameters['process']];
+			$extensionConfiguration = $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['vge_vitalstatistics']['processes'][$parameters['process']];
 		}
 		else {
-			$configuration = $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['vge_vitalstatistics']['processes']['_DEFAULT'];
+			$extensionConfiguration = $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['vge_vitalstatistics']['processes']['_DEFAULT'];
 		}
-		$stepConfiguration = $configuration['steps'][$parameters['step']];
+		$stepConfiguration = $extensionConfiguration['steps'][$parameters['step']];
 //t3lib_div::debug($stepConfiguration);
 //t3lib_div::debug($parameters);
 
@@ -96,6 +100,14 @@ class tx_vgevitalstatistics_model_base extends tx_vgeprocesses_model_base {
 				$data['current'] = $this->processValidationStep($stepConfiguration, $parameters);
 				$data['current']['type'] = 'validation';
 				break;
+			case 'payment':
+				$data['current'] = $this->processPaymentStep($stepConfiguration, $parameters);
+				$data['current']['type'] = 'payment';
+				break;
+			case 'paymentvalidation':
+				$data['current'] = $this->processPaymentValidationStep($stepConfiguration, $parameters);
+				$data['current']['type'] = 'paymentvalidation';
+				break;
 			default:
 					// The step has no configuration (issue error?)
 				$data['current'] = array('type' => '');
@@ -106,9 +118,10 @@ class tx_vgevitalstatistics_model_base extends tx_vgeprocesses_model_base {
 		// TODO: change definition of $data, because previous or next could already be defined inside calls above
 			// Get data model for previous step
 		$data['previous'] = $this->getPreviousStepLinkInfo($parameters);
+
 			// Get data model for next step
 		if ($stepConfiguration['displayNextButton']) {
-			$data['next'] = $this->getNextStepLinkInfo($configuration, $parameters);
+			$data['next'] = $this->getNextStepLinkInfo($extensionConfiguration, $parameters);
 		}
 //t3lib_div::debug($data);
 		return $data;
@@ -134,7 +147,7 @@ class tx_vgevitalstatistics_model_base extends tx_vgeprocesses_model_base {
 			// Get selected flexform sheet
 		if (isset($dataStructureArray['sheets'][$flexformSheet]['ROOT'])) {
 			$sheet = $dataStructureArray['sheets'][$flexformSheet]['ROOT'];
-			$data['stepTitle'] = $GLOBALS['LANG']->sL($sheet['TCEforms']['sheetTitle']);
+			$data['stepTitle'] = $GLOBALS['TSFE']->sL($sheet['TCEforms']['sheetTitle']);
 
 				// Get object to transform TCA data to FORM definition
 			$tcaConverter = t3lib_div::makeInstance('tx_advancedform_tcatoforms');
@@ -193,7 +206,7 @@ class tx_vgevitalstatistics_model_base extends tx_vgeprocesses_model_base {
 			$data['input'] = array();
 			foreach ($sheet['el'] as $field => $fieldData) {
 				if (isset($parameters[$field])) {
-					$fieldName = $GLOBALS['LANG']->sL($fieldData['TCEforms']['label']);
+					$fieldName = $GLOBALS['TSFE']->sL($fieldData['TCEforms']['label']);
 					$data['input'][$fieldName] = $parameters[$field];
 				}
 				else {
@@ -201,6 +214,193 @@ class tx_vgevitalstatistics_model_base extends tx_vgeprocesses_model_base {
 				}
 			}
 		}
+//t3lib_div::debug($data);
+		return $data;
+	}
+
+	/**
+	 * This method gathers all the data related to the payment process
+	 *
+	 * @param	array	$configuration: configuration options for the step
+	 * @param	array	$parameters: current process parameters
+	 *
+	 * @return	array	data model
+	 */
+	public function processPaymentStep($configuration, $parameters) {
+		$data = array();
+
+			// Reset session vars
+		$GLOBALS['TSFE']->fe_user->setKey('ses', 'tx_donations_payment_reference', false);
+		$GLOBALS['TSFE']->fe_user->setKey('ses', 'tx_donations_payment_piVars', array());
+
+			// Get the list of payment methods
+        $providerFactoryObj = tx_paymentlib_providerfactory::getInstance();
+		$paymentMethodsArr = array();
+		if ($providerObjectsArr = $providerFactoryObj->getProviderObjects()) {
+			foreach ($providerObjectsArr as $providerObj) {
+				$tmpArr = $providerObj->getAvailablePaymentMethods();
+				$keys = array_intersect(array_keys($tmpArr), $configuration['paymethods']);
+				foreach ($keys as $key) {
+					$paymentMethodsArr[$key] = $tmpArr[$key];
+				}
+			}
+		}
+		$data['payment'] = $paymentMethodsArr;
+
+				// Get helper object for creating FORM fields
+		$formHelper = t3lib_div::makeInstance('tx_advancedform_formelements');
+			// Define wrapper for field names
+		$formHelper->setPrefix('tx_vgeprocesses_controller');
+			// Prepare form syntax for choice of payment methods
+		$selectedPayment = $parameters['paymethod'];
+		$formInfo = '';
+		$options = array();
+		foreach ($paymentMethodsArr as $paymentMethodKey => $paymentMethodConf) {
+			$paymentMethodConf['iconpath'] = str_replace('EXT:', '', $paymentMethodConf['iconpath']);
+			$label = htmlspecialchars($GLOBALS['TSFE']->sL($paymentMethodConf['label']));
+			if (!empty($paymentMethodConf['iconpath'])) $label = '<img src="/typo3conf/ext/' . $paymentMethodConf['iconpath'] . '" alt="'.$label.'" /> '.$label;
+			$options[$paymentMethodKey] = $label;
+		}
+		$formInfo .= $formHelper->addRadioButton('Méthode de paiement', 'paymethod', $options);
+
+			// Add hidden fields with information about process type and subtype
+		$formInfo .= $formHelper->addHidden('viewType', 'run');
+		$formInfo .= $formHelper->addHidden('subtype', $parameters['subtype']);
+		$formInfo .= $formHelper->addHidden('process', $parameters['process']);
+
+			// Add hidden field with information about step
+		$formInfo .= $formHelper->addHidden('step', $parameters['step'] + 1);
+		
+			// Add submit button
+		$formInfo .= ' |form_submit = submit| Valider';
+
+			// Store the form information
+		$data['form'] = $formInfo;
+			
+//t3lib_div::debug($data);
+		return $data;
+	}
+
+	/**
+	 * This method gathers all the data related to the payment validation step
+	 * In such a step the user is expected to confirm the choice of payment method
+	 * and fill out any additional data required by the payment method
+	 *
+	 * @param	array	$configuration: configuration options for the step
+	 * @param	array	$parameters: current process parameters
+	 *
+	 * @return	array	data model
+	 */
+	public function processPaymentValidationStep($configuration, $parameters) {
+		$data = array();
+
+// A reference must be defined so that if the payment has alreday been processed, it cannot be processed a second time
+
+		if (!$paymentReference = $GLOBALS['TSFE']->fe_user->getKey('ses', 'tx_vgevitalstatistics_payment_reference')) {
+			$GLOBALS['TSFE']->fe_user->setKey('ses', 'tx_vgevitalstatistics_payment_reference', time());
+			$paymentReference = $GLOBALS['TSFE']->fe_user->getKey('ses', 'tx_vgevitalstatistics_payment_reference');
+		}
+
+// Plugin variables must be stored in session for when the payment process redirects to the donations process
+// If values are not stored yet, do it. Else read them.
+
+		if (!$GLOBALS['TSFE']->fe_user->getKey('ses', 'tx_vgevitalstatistics_piVars')) {
+			$GLOBALS['TSFE']->fe_user->setKey('ses', 'tx_vgevitalstatistics_piVars', $parameters);
+		}
+		else {
+			$localParameters = $GLOBALS['TSFE']->fe_user->getKey('ses', 'tx_vgevitalstatistics_payment_piVars');
+			if (is_array($localParameters)) {
+				foreach ($localParameters as $key => $val) {
+					$parameters[$key] = !empty($parameters[$key]) ? $parameters[$key] : $localParameters[$key];
+				}
+			}
+		}
+
+// Get payment method information, in particular hidden or visible fields
+
+		$providerFactoryObj = tx_paymentlib_providerfactory::getInstance();
+		$providerObj = $providerFactoryObj->getProviderObjectByPaymentMethod($parameters['paymethod']);
+        
+		$methods = $providerObj->getAvailablePaymentMethods();
+		$paymethodLabel = $methods[$parameters['paymethod']]['label'];
+
+		$ok =  $providerObj->transaction_init(TX_PAYMENTLIB_TRANSACTION_ACTION_AUTHORIZEANDTRANSFER, $parameters['paymethod'], TX_PAYMENTLIB_GATEWAYMODE_FORM, tx_vgevitalstatistics_common_base::$extKey);
+		if (!$ok) {
+			$data['error'] = $GLOBALS['LANG']->getLL('transaction_init_failed');
+			return $data;
+		}
+
+// The confirm page can be called again if the payment failed
+// If that is the case, issue error message
+
+		if (is_array($transactionResultsArr = $providerObj->transaction_getResults($paymentReference))) {
+			$message = $GLOBALS['LANG']->getLL('payment_declined');
+		}
+
+// TODO: change hardcoded amount and currency
+		$transactionDetailsArr = array (
+			'transaction' => array (
+				'amount' => 5000,
+				'currency' => 'CHF',
+			),
+			'options' => array (
+				'reference' => $paymentReference,
+			),
+		);
+		$ok = $providerObj->transaction_setDetails($transactionDetailsArr);
+		if (!$ok) {
+			$data['error'] = $GLOBALS['LANG']->getLL('transaction_settings_failed');
+			return $data;
+		}
+
+// Set response URLs
+// They are both very similar except for the step
+// The OK page leads to the next step, whereas the error page stays on the same step
+
+		$baseURI = ((empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] == 'off') ? 'http://' : 'https://') . t3lib_div::getThisUrl();
+		$baseParameters = array(
+								'tx_vgeprocesses_controller[viewType]' => 'run',
+								'tx_vgeprocesses_controller[subtype]' => $parameters['subtype'],
+								'tx_vgeprocesses_controller[process]' => $parameters['process']
+							);
+		$providerObj->transaction_setErrorPage($baseURI.$this->controller->pi_getPageLink($GLOBALS['TSFE']->id, '', array_merge($baseParameters, array('step' => $parameters['step']))));
+		$providerObj->transaction_setOKPage($baseURI.$this->controller->pi_getPageLink($GLOBALS['TSFE']->id, '', array_merge($baseParameters, array('step' => $parameters['step'] + 1))));
+
+// Define hidden fields for payment method
+
+				// Get helper object for creating FORM fields
+		$formHelper = t3lib_div::makeInstance('tx_advancedform_formelements');
+			// Define wrapper for field names
+//		$formHelper->setPrefix('tx_vgeprocesses_controller');
+		$formInfo = '';
+		$hiddenFields = array();
+		if ($hf = $providerObj->transaction_formGetHiddenFields()) {
+			foreach ($hf as $name => $value) {
+				$formInfo .= $formHelper->addHidden($name, $value);
+//				$hiddenFields[] = '<input type="hidden" name="'.$name.'" value="'.$value.'" />';
+			}
+		}
+
+// Define any visible field needed for payment method
+
+		if ($vf = $providerObj->transaction_formGetVisibleFields()) {
+			foreach ($vf as $name => $field) {
+				$options = array('size' => $field['config']['size'], 'maxlength' => $field['config']['max']);
+				$formInfo .= $formHelper->addElement($field['config']['type'], $name, $GLOBALS['TSFE']->sL($field['label']), '', false, $options);
+			}
+		}
+
+		//TODO: modify FORM syntax to accept those parameters
+//		$markers['###FORM_URL###'] = $providerObj->transaction_formGetActionURI();
+//		$markers['###FORM_FORM_PARAMS###'] = $providerObj->transaction_formGetFormParms();
+//		$markers['###BUTTONS###'] .= '<input type="submit" name="submit" value="'.$this->pi_getLL('confirm').'" '.($providerObj->transaction_formGetSubmitParms()).' />';
+		
+			// Add submit button (temporary)
+		$formInfo .= ' |form_submit = submit| Valider';
+
+			// Store the form information
+		$data['form'] = $formInfo;
+			
 //t3lib_div::debug($data);
 		return $data;
 	}

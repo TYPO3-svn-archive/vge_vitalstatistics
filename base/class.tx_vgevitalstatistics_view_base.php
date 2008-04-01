@@ -50,6 +50,7 @@ class tx_vgevitalstatistics_view_base extends tx_vgeprocesses_view_base {
 	 */
 	public function displayProcess($data, &$pObj) {
 //t3lib_div::debug($pObj->cObj->data);
+//t3lib_div::debug($data);
 		$localCObj = t3lib_div::makeInstance('tslib_cObj');
 			// Display current step
 		$content = '<h2>'.$data['current']['name'].'</h2>';
@@ -67,6 +68,24 @@ class tx_vgevitalstatistics_view_base extends tx_vgeprocesses_view_base {
 					$content .= '<li>'.$name.': '.$value.'</li>';
 				}
 				$content .= '</ul>';
+				break;
+			case 'payment':
+					// Load the form structure into the bodytext field of the cObj data
+				$localCObj->data['bodytext'] = $data['current']['form'];
+					// Render the form with the appropriate configuration
+				$content .= $localCObj->cObjGetSingle('FORM', $pObj->conf['forms.']);
+				break;
+			case 'paymentvalidation':
+				if (isset($data['current']['error'])) {
+					$content .= '<p><strong>'.$data['current']['error'].'</strong></p>';
+				}
+				if (isset($data['current']['form'])) {
+						// Load the form structure into the bodytext field of the cObj data
+					$localCObj->data['bodytext'] = $data['current']['form'];
+						// Render the form with the appropriate configuration
+					$content .= $localCObj->cObjGetSingle('FORM', $pObj->conf['forms.']);
+				}
+				break;
 			default:
 				$content .= '<p>It seems this step was not configured properly.</p>';
 				break;
