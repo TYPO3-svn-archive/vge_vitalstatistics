@@ -11,6 +11,7 @@ CREATE TABLE tx_vgevitalstatistics_processes (
 	type varchar(255) DEFAULT '' NOT NULL,
 	user blob NOT NULL,
 	status int(11) DEFAULT '0' NOT NULL,
+    paymentlib_trx_uid int(11) DEFAULT '0' NOT NULL,
 	formdata mediumtext NOT NULL,
 	
 	PRIMARY KEY (uid),

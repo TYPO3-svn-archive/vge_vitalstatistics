@@ -33,6 +33,7 @@ $EM_CONF[$_EXTKEY] = array(
 	'constraints' => array(
 		'depends' => array(
 			'cms' => '',
+			'moneylib' => '',
 			'vge_processes' => '',
 		),
 		'conflicts' => array(

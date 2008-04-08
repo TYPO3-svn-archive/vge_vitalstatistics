@@ -26,6 +26,10 @@ $TYPO3_CONF_VARS['EXTCONF']['vge_vitalstatistics']['processes'] = array(
 									'paymentlib_offline_cod',
 									'paymentlib_offline_cash'
 								),
+				'paymentinfo' => array(
+									'amount' => 50,
+									'currency' => 'CHF',
+								)
 			),
 			4 => array(
 				'type' => 'paymentvalidation',

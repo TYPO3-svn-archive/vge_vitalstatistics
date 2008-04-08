@@ -13,6 +13,8 @@
 			<label index="transaction_init_failed">The payment process could not be started.</label>
 			<label index="payment_declined">The payment was refused.</label>
 			<label index="transaction_settings_failed">The payment details could not be defined.</label>
+			<label index="confirm_order_payment">Please confirm a payment of %s for your order.</label>
+			<label index="process_successful">The on-line process was successfully completed.</label>
 		</languageKey>
 		<languageKey index="fr" type="array">
 			<label index="process.birth">Commander un certificat de naissance</label>
@@ -22,6 +24,8 @@
 			<label index="transaction_init_failed">Le processus de paiement n'a pas pu être lancé.</label>
 			<label index="payment_declined">Le paiement a été refusé.</label>
 			<label index="transaction_settings_failed">Les détails du paiement n'ont pas pu être définis.</label>
+			<label index="confirm_order_payment">Veuillez confirmer le paiement de %s pour votre commande.</label>
+			<label index="process_successful">La procédure en ligne a été accomplie avec succès.</label>
 		</languageKey>
 	</data>
 </T3locallang>

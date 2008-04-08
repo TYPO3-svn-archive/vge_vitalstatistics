@@ -7,7 +7,7 @@ t3lib_extMgm::allowTableOnStandardPages('tx_vgevitalstatistics_processes');
 $TCA['tx_vgevitalstatistics_processes'] = array (
 	'ctrl' => array (
 		'title'     => 'LLL:EXT:vge_vitalstatistics/locallang_db.xml:tx_vgevitalstatistics_processes',		
-		'label'     => 'type',	
+		'label'     => 'type',
 		'tstamp'    => 'tstamp',
 		'crdate'    => 'crdate',
 		'cruser_id' => 'cruser_id',

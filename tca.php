@@ -37,12 +37,14 @@ $TCA['tx_vgevitalstatistics_processes'] = array (
 				'size'     => '4',
 				'max'      => '4',
 				'eval'     => 'int',
-				'checkbox' => '0',
-				'range'    => Array (
-					'upper' => '1000',
-					'lower' => '10'
-				),
 				'default' => 0
+			)
+		),
+		'paymentlib_trx_uid' => Array (		
+			'exclude' => 0,		
+			'label' => 'LLL:EXT:vge_vitalstatistics/locallang_db.xml:tx_vgevitalstatistics_processes.paymentlib_trx_uid',		
+			'config' => Array (
+				'type'     => 'none',
 			)
 		),
 		'formdata' => Array (		
@@ -56,7 +58,7 @@ $TCA['tx_vgevitalstatistics_processes'] = array (
 		),
 	),
 	'types' => array (
-		'0' => array('showitem' => 'type;;;;1-1-1, user, status, formdata')
+		'0' => array('showitem' => 'type;;;;1-1-1, crdate, user, status, formdata')
 	),
 	'palettes' => array (
 		'1' => array('showitem' => '')

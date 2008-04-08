@@ -67,11 +67,12 @@ class tx_vgevitalstatistics_model_base extends tx_vgeprocesses_model_base {
 	 * This process returns all the data related to a given process at a given step for vital statistics
 	 *
 	 * @param	array		$parameters: list of parameters, including process name, step, etc.
+	 * @param	array		$configuration: TypoScript configuration of the process subtype
 	 * @param	reference	$controller: reference to the controller object
 	 *
 	 * @return	array	all data related to the process and step
 	 */
-	public function getDataForStep($parameters, &$controller) {
+	public function getDataForStep($parameters, $configuration, &$controller) {
 			// Store reference to the controller
 		$this->controller = $controller;
 
@@ -107,6 +108,10 @@ class tx_vgevitalstatistics_model_base extends tx_vgeprocesses_model_base {
 			case 'paymentvalidation':
 				$data['current'] = $this->processPaymentValidationStep($stepConfiguration, $parameters);
 				$data['current']['type'] = 'paymentvalidation';
+				break;
+			case 'confirmation':
+				$data['current'] = $this->processConfirmationStep($stepConfiguration, $configuration, $parameters, $extensionConfiguration['steps']);
+				$data['current']['type'] = 'confirmation';
 				break;
 			default:
 					// The step has no configuration (issue error?)
@@ -230,8 +235,8 @@ class tx_vgevitalstatistics_model_base extends tx_vgeprocesses_model_base {
 		$data = array();
 
 			// Reset session vars
-		$GLOBALS['TSFE']->fe_user->setKey('ses', 'tx_donations_payment_reference', false);
-		$GLOBALS['TSFE']->fe_user->setKey('ses', 'tx_donations_payment_piVars', array());
+		$GLOBALS['TSFE']->fe_user->setKey('ses', 'tx_vgevitalstatistics_payment_reference', false);
+		$GLOBALS['TSFE']->fe_user->setKey('ses', 'tx_vgevitalstatistics_payment_piVars', array());
 
 			// Get the list of payment methods
         $providerFactoryObj = tx_paymentlib_providerfactory::getInstance();
@@ -262,6 +267,8 @@ class tx_vgevitalstatistics_model_base extends tx_vgeprocesses_model_base {
 			$options[$paymentMethodKey] = $label;
 		}
 		$formInfo .= $formHelper->addRadioButton('Méthode de paiement', 'paymethod', $options);
+		$formInfo .= $formHelper->addHidden('amount', $configuration['paymentinfo']['amount']);
+		$formInfo .= $formHelper->addHidden('currency', $configuration['paymentinfo']['currency']);
 
 			// Add hidden fields with information about process type and subtype
 		$formInfo .= $formHelper->addHidden('viewType', 'run');
@@ -304,8 +311,8 @@ class tx_vgevitalstatistics_model_base extends tx_vgeprocesses_model_base {
 // Plugin variables must be stored in session for when the payment process redirects to the donations process
 // If values are not stored yet, do it. Else read them.
 
-		if (!$GLOBALS['TSFE']->fe_user->getKey('ses', 'tx_vgevitalstatistics_piVars')) {
-			$GLOBALS['TSFE']->fe_user->setKey('ses', 'tx_vgevitalstatistics_piVars', $parameters);
+		if (!$GLOBALS['TSFE']->fe_user->getKey('ses', 'tx_vgevitalstatistics_payment_piVars')) {
+			$GLOBALS['TSFE']->fe_user->setKey('ses', 'tx_vgevitalstatistics_payment_piVars', $parameters);
 		}
 		else {
 			$localParameters = $GLOBALS['TSFE']->fe_user->getKey('ses', 'tx_vgevitalstatistics_payment_piVars');
@@ -320,9 +327,9 @@ class tx_vgevitalstatistics_model_base extends tx_vgeprocesses_model_base {
 
 		$providerFactoryObj = tx_paymentlib_providerfactory::getInstance();
 		$providerObj = $providerFactoryObj->getProviderObjectByPaymentMethod($parameters['paymethod']);
-        
-		$methods = $providerObj->getAvailablePaymentMethods();
-		$paymethodLabel = $methods[$parameters['paymethod']]['label'];
+
+//		$methods = $providerObj->getAvailablePaymentMethods();
+//		$paymethodLabel = $methods[$parameters['paymethod']]['label'];
 
 		$ok =  $providerObj->transaction_init(TX_PAYMENTLIB_TRANSACTION_ACTION_AUTHORIZEANDTRANSFER, $parameters['paymethod'], TX_PAYMENTLIB_GATEWAYMODE_FORM, tx_vgevitalstatistics_common_base::$extKey);
 		if (!$ok) {
@@ -340,8 +347,8 @@ class tx_vgevitalstatistics_model_base extends tx_vgeprocesses_model_base {
 // TODO: change hardcoded amount and currency
 		$transactionDetailsArr = array (
 			'transaction' => array (
-				'amount' => 5000,
-				'currency' => 'CHF',
+				'amount' => $parameters['amount'],
+				'currency' => $parameters['currency'],
 			),
 			'options' => array (
 				'reference' => $paymentReference,
@@ -363,8 +370,8 @@ class tx_vgevitalstatistics_model_base extends tx_vgeprocesses_model_base {
 								'tx_vgeprocesses_controller[subtype]' => $parameters['subtype'],
 								'tx_vgeprocesses_controller[process]' => $parameters['process']
 							);
-		$providerObj->transaction_setErrorPage($baseURI.$this->controller->pi_getPageLink($GLOBALS['TSFE']->id, '', array_merge($baseParameters, array('step' => $parameters['step']))));
-		$providerObj->transaction_setOKPage($baseURI.$this->controller->pi_getPageLink($GLOBALS['TSFE']->id, '', array_merge($baseParameters, array('step' => $parameters['step'] + 1))));
+		$providerObj->transaction_setErrorPage($baseURI.$this->controller->pi_getPageLink($GLOBALS['TSFE']->id, '', array_merge($baseParameters, array('tx_vgeprocesses_controller[step]' => $parameters['step']))));
+		$providerObj->transaction_setOKPage($baseURI.$this->controller->pi_getPageLink($GLOBALS['TSFE']->id, '', array_merge($baseParameters, array('tx_vgeprocesses_controller[step]' => $parameters['step'] + 1))));
 
 // Define hidden fields for payment method
 
@@ -391,18 +398,121 @@ class tx_vgevitalstatistics_model_base extends tx_vgeprocesses_model_base {
 		}
 
 		//TODO: modify FORM syntax to accept those parameters
-//		$markers['###FORM_URL###'] = $providerObj->transaction_formGetActionURI();
 //		$markers['###FORM_FORM_PARAMS###'] = $providerObj->transaction_formGetFormParms();
 //		$markers['###BUTTONS###'] .= '<input type="submit" name="submit" value="'.$this->pi_getLL('confirm').'" '.($providerObj->transaction_formGetSubmitParms()).' />';
+		$data['formconfig'] = array();
+		$data['formconfig']['type'] = $providerObj->transaction_formGetActionURI();
+
+			// Add hidden fields with information about process type and subtype
+		$formInfo .= $formHelper->addHidden('viewType', 'run');
+		$formInfo .= $formHelper->addHidden('subtype', $parameters['subtype']);
+		$formInfo .= $formHelper->addHidden('process', $parameters['process']);
+
+			// Add hidden field with information about step
+		$formInfo .= $formHelper->addHidden('step', $parameters['step'] + 1);
 		
 			// Add submit button (temporary)
 		$formInfo .= ' |form_submit = submit| Valider';
 
 			// Store the form information
 		$data['form'] = $formInfo;
-			
+
+			// Define additional data for display
+		$data['data'] = array('amount' => $parameters['amount']);
+		$data['data']['currency'] = $this->getCurrencyInformation($parameters['currency']);
+
 //t3lib_div::debug($data);
 		return $data;
+	}
+
+	/**
+	 * This method gathers all the data related to the confirmation step
+	 * This is the final step of the process. It stores data to the database and prepares a confirmation message.
+	 *
+	 * @param	array	$configuration: configuration options for the step
+	 * @param	array	$processConfiguration: TypoScript configuration for the process subtype
+	 * @param	array	$parameters: current process parameters
+	 * @param	array	$steps: configuration options of all steps
+	 *
+	 * @return	array	data model
+	 */
+	public function processConfirmationStep($configuration, $processConfiguration, $parameters, $steps) {
+		$data = array();
+
+			// Get the payment transaction's reference
+		$paymentReference = $GLOBALS['TSFE']->fe_user->getKey('ses', 'tx_vgevitalstatistics_payment_reference');
+
+			// Get the payment information stored in session
+		if (!$GLOBALS['TSFE']->fe_user->getKey('ses', 'tx_vgevitalstatistics_payment_piVars')) {
+			$GLOBALS['TSFE']->fe_user->setKey('ses', 'tx_vgevitalstatistics_payment_piVars', $parameters);
+		}
+		else {
+			$localParameters = $GLOBALS['TSFE']->fe_user->getKey('ses', 'tx_vgevitalstatistics_payment_piVars');
+			if (is_array($localParameters)) {
+				foreach ($localParameters as $key => $val) {
+					$parameters[$key] = !empty($parameters[$key]) ? $parameters[$key] : $localParameters[$key];
+				}
+			}
+		}
+
+			// If a payment was made store the transaction in the database
+		if ($paymentReference) {
+				// First get the payment transaction results
+			$providerFactoryObj = tx_paymentlib_providerfactory::getInstance();
+			$providerObj = $providerFactoryObj->getProviderObjectByPaymentMethod($parameters['paymethod']);
+//			$methods = $providerObj->getAvailablePaymentMethods();
+//			$paymethodLabel = $methods[$this->getPiVars('paymethod')]['label'];
+			$providerObj->transaction_init(TX_PAYMENTLIB_TRANSACTION_ACTION_AUTHORIZEANDTRANSFER, $parameters['paymethod'], TX_PAYMENTLIB_GATEWAYMODE_FORM, tx_vgevitalstatistics_common_base::$extKey);
+			$transactionResultsArr = $providerObj->transaction_getResults($paymentReference);
+
+				// Prepare data for storage into flexform field
+			$flexformData = array('data' => array());
+				// Load the full TCA for the vital statistics tables
+			t3lib_div::loadTCA('tx_vgevitalstatistics_processes');
+				// Load the formdata flexform
+			$dataStructureArray = t3lib_BEfunc::getFlexFormDS($GLOBALS['TCA']['tx_vgevitalstatistics_processes']['columns']['formdata']['config'], array(), 'tx_vgevitalstatistics_processes');
+				// Loop on all steps and handle those that have a sheet
+			foreach ($steps as $stepData) {
+				if (isset($stepData['sheet'])) {
+					$stepInput = array();
+					if (isset($dataStructureArray['sheets'][$stepData['sheet']]['ROOT'])) {
+						$sheet = $dataStructureArray['sheets'][$stepData['sheet']]['ROOT'];
+			
+							// Loop on sheet elements
+							// If an element has a value, store it
+						foreach ($sheet['el'] as $field => $fieldData) {
+							if (isset($parameters[$field])) {
+								$stepInput[$field] = array('vDEF' => $parameters[$field]);
+							}
+						}
+					}
+					$flexformData['data'][$stepData['sheet']] = array('lDEF' => $stepInput);
+				}
+			}
+				// Transform array to flexform data structure with the help of t3lib_flexformtools
+			$flexTool = t3lib_div::makeInstance('t3lib_flexformtools');
+			$flexformValue = $flexTool->flexArray2Xml($flexformData, true);
+
+				// Store vital statistics transaction
+			$fields = array ();
+			$time = time();
+			$fields['tstamp'] = $time;
+			$fields['crdate'] = $time;
+			$fields['pid'] = $processConfiguration['storagePID'];
+			$fields['cruser_id'] = '';
+			$fields['type'] = $parameters['process'];
+			$fields['user'] = '';
+			$fields['status'] = 1;
+			$fields['formdata'] = $flexformValue;
+			$fields['paymentlib_trx_uid'] = $transactionResultsArr['uid'];
+			$GLOBALS['TYPO3_DB']->exec_INSERTquery('tx_vgevitalstatistics_processes', $fields);
+//TODO: send confirmation mail (in view?)
+	
+				// Transaction is finished, reset session vars
+			$GLOBALS['TSFE']->fe_user->setKey('ses', 'tx_vgevitalstatistics_payment_reference', false);
+			$GLOBALS['TSFE']->fe_user->setKey('ses', 'tx_vgevitalstatistics_payment_piVars', array());
+			$GLOBALS['TSFE']->fe_user->setKey('ses', 'processData', array());
+		}
 	}
 
 	/**
@@ -473,6 +583,22 @@ class tx_vgevitalstatistics_model_base extends tx_vgeprocesses_model_base {
 	 */
 	public function getProcessName($processKey) {
 		return $GLOBALS['LANG']->getLL('process.'.$processKey);
+	}
+
+	/**
+	 * This method gets the information about a currency from static_currencies
+	 *
+	 * @param	string	3-letter ISO code of the currency
+	 *
+	 * @return	array	currency data
+	 */
+	protected function getCurrencyInformation($code) {
+		$currency = array();
+		if (!empty($code)) {
+			$result = $GLOBALS['TYPO3_DB']->exec_SELECTquery('*','static_currencies', "cu_iso_3 = '".$code."'");
+			if ($result) $currency = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($result);
+		}
+		return $currency;
 	}
 }
 

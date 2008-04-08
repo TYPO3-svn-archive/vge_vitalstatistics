@@ -24,6 +24,7 @@
 
 require_once(t3lib_extMgm::extPath('vge_processes').'class.tx_vgeprocesses_view_base.php');
 require_once(t3lib_extMgm::extPath('vge_vitalstatistics').'base/class.tx_vgevitalstatistics_common_base.php');
+require_once(t3lib_extMgm::extPath('moneylib').'class.tx_moneylib.php');
 
 /**
  * View service for base processes related to vital statistics
@@ -33,10 +34,12 @@ require_once(t3lib_extMgm::extPath('vge_vitalstatistics').'base/class.tx_vgevita
  * @subpackage	tx_vgevitalstatistics
  */
 class tx_vgevitalstatistics_view_base extends tx_vgeprocesses_view_base {
+	protected $moneylibObj; // Reference to moneylib object
 
 	public function __construct() {
 		$this->processList = tx_vgevitalstatistics_common_base::$processList;
 		$this->locallangFile = tx_vgevitalstatistics_common_base::$locallangFile;
+		$this->moneylibObj = t3lib_div::makeInstance('tx_moneylib');
 		parent::__construct();
 	}
 
@@ -79,11 +82,25 @@ class tx_vgevitalstatistics_view_base extends tx_vgeprocesses_view_base {
 				if (isset($data['current']['error'])) {
 					$content .= '<p><strong>'.$data['current']['error'].'</strong></p>';
 				}
+					// Display confirmation data
+				if (isset($data['current']['data'])) {
+					$formattedAmount = $this->moneylibObj->format(intval($data['current']['data']['amount'] * $data['current']['data']['currency']['cu_sub_divisor']), $data['current']['data']['currency']['cu_iso_3'], true);
+					$content .= '<p>'.sprintf($GLOBALS['LANG']->getLL('confirm_order_payment'), $formattedAmount).'</p>';
+				}
 				if (isset($data['current']['form'])) {
 						// Load the form structure into the bodytext field of the cObj data
 					$localCObj->data['bodytext'] = $data['current']['form'];
 						// Render the form with the appropriate configuration
-					$content .= $localCObj->cObjGetSingle('FORM', $pObj->conf['forms.']);
+					$config = array_merge($pObj->conf['forms.'], $data['current']['formconfig']);
+					$content .= $localCObj->cObjGetSingle('FORM', $config);
+				}
+				break;
+			case 'confirmation':
+				if (isset($data['current']['error'])) {
+					$content .= '<p><strong>'.$data['current']['error'].'</strong></p>';
+				}
+				else {
+					$content .= '<p>'.$GLOBALS['LANG']->getLL('process_successful').'</p>';
 				}
 				break;
 			default:

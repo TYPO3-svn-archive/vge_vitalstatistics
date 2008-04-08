@@ -8,8 +8,10 @@
 		<languageKey index="default" type="array">
 			<label index="tx_vgevitalstatistics_processes">Vital statistics Processes</label>
 			<label index="tx_vgevitalstatistics_processes.type">Process type</label>
+			<label index="tx_vgevitalstatistics_processes.crdate">Transaction date</label>
 			<label index="tx_vgevitalstatistics_processes.user">User</label>
 			<label index="tx_vgevitalstatistics_processes.status">Status</label>
+			<label index="tx_vgevitalstatistics_processes.paymentlib_trx_uid">Payment transaction ID</label>
 			<label index="tx_vgevitalstatistics_processes.formdata">Form data</label>
 			<label index="tx_vgevitalstatistics_processes.pi_flexform.sheetGeneral">General</label>
 			<label index="tx_vgevitalstatistics_processes.pi_flexform.gender">Gender</label>
@@ -22,8 +24,10 @@
 		<languageKey index="fr" type="array">
 			<label index="tx_vgevitalstatistics_processes">Procédures d'état civil</label>
 			<label index="tx_vgevitalstatistics_processes.type">Type de procédure</label>
+			<label index="tx_vgevitalstatistics_processes.crdate">Date de la transaction</label>
 			<label index="tx_vgevitalstatistics_processes.user">Utilisateur</label>
 			<label index="tx_vgevitalstatistics_processes.status">Statut</label>
+			<label index="tx_vgevitalstatistics_processes.paymentlib_trx_uid">Identifiant transaction paiement</label>
 			<label index="tx_vgevitalstatistics_processes.formdata">Données saisies</label>
 			<label index="tx_vgevitalstatistics_processes.pi_flexform.sheetGeneral">Généralités</label>
 			<label index="tx_vgevitalstatistics_processes.pi_flexform.gender">Sexe</label>
